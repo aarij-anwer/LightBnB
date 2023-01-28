@@ -210,9 +210,55 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+
+  const queryString = `
+    INSERT INTO properties (owner_id, title, description, thumbnail_photo_url, cover_photo_url, cost_per_night, parking_spaces, number_of_bathrooms, number_of_bedrooms, country, street, city, province, post_code, active) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, true)
+    RETURNING *;
+    `;
+
+  const values = [];
+  values.push(property.owner_id);
+
+  //check if the form submitted all the fields
+  //if yes then insert the value from the property object
+  //if not then add a dummy value
+  property.title ? values.push(property.title) : values.push('title');
+  
+  property.description ? values.push(property.description) : values.push('description');
+  
+  property.thumbnail_photo_url ? values.push(property.thumbnail_photo_url) : values.push('https://images.pexels.com/photos/1172064/pexels-photo-1172064.jpeg?auto=compress&cs=tinysrgb&h=350');
+  
+  property.cover_photo_url ? values.push(property.cover_photo_url) : values.push('https://images.pexels.com/photos/1172064/pexels-photo-1172064.jpeg');
+  
+  property.cost_per_night ? values.push(property.cost_per_night) : values.push(1000);
+  
+  property.parking_spaces ? values.push(property.parking_spaces) : values.push(1);
+
+  property.number_of_bathrooms ? values.push(property.number_of_bathrooms) : values.push(1);
+
+  property.number_of_bedrooms ? values.push(property.number_of_bedrooms) : values.push(1);
+
+  property.country ? values.push(property.country) : values.push('Canada');
+
+  property.street ? values.push(property.street) : values.push('Homeview Court');
+
+  property.city ? values.push(property.city) : values.push('London');
+
+  property.province ? values.push(property.province) : values.push('Ontario');
+
+  property.post_code ? values.push(property.post_code) : values.push('N6C6C1');
+
+  console.log(queryString);
+  console.log(values);
+
+  return pool
+    .query(queryString, values)
+    .then((response) => {
+      return response.rows[0];
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 };
 exports.addProperty = addProperty;

@@ -93,12 +93,10 @@ const getAllProperties = (options, limit = 10) => {
   return pool
     .query(queryString, values)
     .then((result) => {
-      // console.log(result.rows);
       return result.rows;
     })
     .catch((err) => {
       console.log(err.message);
-      // return Promise.reject(err);
     });
 };
 

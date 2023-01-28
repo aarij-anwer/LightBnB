@@ -79,10 +79,6 @@ const addUser =  function(user) {
     .query(queryString, values)
     .then((result) => {
       console.log(result.rows);
-      // const newUser = {};
-      // newUser.id = result.rows[0].id;
-      // newUser.name = result.rows[0].name;
-      // newUser.name = result.rows[0].name;
       return result.rows[0];
     })
     .catch((err) => {
@@ -136,17 +132,67 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 
-const getAllProperties = (options, limit = 10) => {
+const getAllProperties = (options, limit) => {
 
-  const queryString = `
-    SELECT * 
-    FROM properties
-    LIMIT $1;
-    `;
-  const values = [limit];
+  const queryParams = [];
+  let queryString = `
+  SELECT properties.*, avg(property_reviews.rating) as average_rating
+  FROM properties
+  JOIN property_reviews ON properties.id = property_id
+  `;
 
+  if (options.city) {
+    queryParams.push(`%${options.city}%`);
+    queryString += `WHERE city LIKE $${queryParams.length} `;
+  }
+  
+  if (options.owner_id) {
+    queryParams.push(options.owner_id);
+    if (!options.city) {
+      //no WHERE clause so add it
+      queryString += `WHERE owner_id = $${queryParams.length} `;
+    } else {
+      //there's already a WHERE clause
+      queryString += `AND owner_id = $${queryParams.length} `;
+    }
+  }
+
+  if (options.minimum_price_per_night && options.maximum_price_per_night) {
+    queryParams.push(options.minimum_price_per_night * 100);
+    queryParams.push(options.maximum_price_per_night * 100);
+    if (options.city || options.owner_id) {
+      //there's already a WHERE clause
+      queryString += `AND cost_per_night BETWEEN $${queryParams.length - 1} AND $${queryParams.length} `;
+    } else {
+      //no WHERE clause so add it
+      queryString += `WHERE cost_per_night BETWEEN $${queryParams.length - 1} AND $${queryParams.length} `;
+    }
+  }
+  
+  if (options.minimum_rating) {
+    queryParams.push(options.minimum_rating);
+    if (options.city || options.owner_id || (options.minimum_price_per_night && options.maximum_price_per_night)) {
+      //there's already a WHERE clause
+      queryString += `AND property_reviews.rating >= $${queryParams.length}`;
+    } else {
+      //no WHERE clause so add it
+      queryString += `WHERE property_reviews.rating >= $${queryParams.length}`;
+    }
+  }
+
+  //limit comes at the end
+  queryParams.push(limit);
+  queryString += `
+  GROUP BY properties.id
+  ORDER BY cost_per_night
+  LIMIT $${queryParams.length};
+  `;
+  
+  console.log(queryString);
+  console.log(queryParams);
+  
   return pool
-    .query(queryString, values)
+    .query(queryString, queryParams)
     .then((result) => {
       return result.rows;
     })

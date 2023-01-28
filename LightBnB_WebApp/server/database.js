@@ -78,7 +78,6 @@ const addUser =  function(user) {
   return pool
     .query(queryString, values)
     .then((result) => {
-      console.log(result.rows);
       return result.rows[0];
     })
     .catch((err) => {
@@ -114,7 +113,6 @@ const getAllReservations = function(guest_id, limit = 10) {
   return pool
     .query(queryString, values)
     .then((result) => {
-      console.log(result.rows);
       return result.rows;
     })
     .catch((err) => {
@@ -188,16 +186,13 @@ const getAllProperties = (options, limit) => {
   LIMIT $${queryParams.length};
   `;
   
-  console.log(queryString);
-  console.log(queryParams);
-  
   return pool
     .query(queryString, queryParams)
     .then((result) => {
       return result.rows;
     })
     .catch((err) => {
-      console.log(err.message);
+      console.error(err.message);
     });
 };
 
@@ -248,9 +243,6 @@ const addProperty = function(property) {
   property.province ? values.push(property.province) : values.push('Ontario');
 
   property.post_code ? values.push(property.post_code) : values.push('N6C6C1');
-
-  console.log(queryString);
-  console.log(values);
 
   return pool
     .query(queryString, values)

@@ -50,7 +50,7 @@ Download the project from here.
 
 ### Database
 1. `cd` into `\LightBnB`. Run `psql`.
-2. Create a new database called `lightbnb` with the command `CREATE DATABASE lightbnb`.
+2. Create a new database called `lightbnb` with the command `CREATE DATABASE lightbnb;`.
 3. Connect to the database with command `\c lightbnb`.
 4. Run the schema file with command `\i migrations/01_schema.sql`.
 5. Run the seed files with commands:

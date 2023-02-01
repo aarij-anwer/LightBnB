@@ -164,25 +164,20 @@ const getAllProperties = (options, limit) => {
     }
   }
   
+  queryString += `GROUP BY properties.id, property_reviews.rating `;
+  
   if (options.minimum_rating) {
     queryParams.push(options.minimum_rating);
-    if (options.city || options.owner_id || (options.minimum_price_per_night && options.maximum_price_per_night)) {
-      //there's already a WHERE clause
-      queryString += `AND property_reviews.rating >= $${queryParams.length}`;
-    } else {
-      //no WHERE clause so add it
-      queryString += `WHERE property_reviews.rating >= $${queryParams.length}`;
-    }
+    queryString += `HAVING property_reviews.rating >= $${queryParams.length} `;
   }
-
+  
   //limit comes at the end
   queryParams.push(limit);
   queryString += `
-  GROUP BY properties.id
   ORDER BY cost_per_night
   LIMIT $${queryParams.length};
   `;
-  
+
   return pool
     .query(queryString, queryParams)
     .then((result) => {
